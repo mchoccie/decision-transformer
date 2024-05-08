@@ -32,7 +32,7 @@ class DecisionTransformer(TrajectoryModel):
             n_embd=hidden_size,
             **kwargs
         )
-
+        print(config)
         # note: the only difference between this GPT2Model and the default Huggingface version
         # is that the positional embeddings are removed (since we'll add those ourselves)
         self.transformer = GPT2Model(config)
@@ -61,12 +61,15 @@ class DecisionTransformer(TrajectoryModel):
 
         # embed each modality with a different head
         state_embeddings = self.embed_state(states)
+
         action_embeddings = self.embed_action(actions)
         returns_embeddings = self.embed_return(returns_to_go)
+
         time_embeddings = self.embed_timestep(timesteps)
 
         # time embeddings are treated similar to positional embeddings
         state_embeddings = state_embeddings + time_embeddings
+
         action_embeddings = action_embeddings + time_embeddings
         returns_embeddings = returns_embeddings + time_embeddings
 

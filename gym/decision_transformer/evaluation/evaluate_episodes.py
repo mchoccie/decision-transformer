@@ -7,7 +7,7 @@ def evaluate_episode(
         state_dim,
         act_dim,
         model,
-        max_ep_len=1000,
+        max_ep_len=30,
         device='cuda',
         target_return=None,
         mode='normal',
@@ -22,7 +22,7 @@ def evaluate_episode(
     state_std = torch.from_numpy(state_std).to(device=device)
 
     state = env.reset()
-
+    #print(state)
     # we keep all the histories on the device
     # note that the latest action and reward will be "padding"
     states = torch.from_numpy(state).reshape(1, state_dim).to(device=device, dtype=torch.float32)
@@ -85,7 +85,10 @@ def evaluate_episode_rtg(
     state = env.reset()
     if mode == 'noise':
         state = state + np.random.normal(0, 0.1, size=state.shape)
-
+    #Modification for discrete RL problem
+    state_array = [0 for i in range(env.observation_space.n)]
+    state_array[state] = 1
+    state = np.array(state_array)
     # we keep all the histories on the device
     # note that the latest action and reward will be "padding"
     states = torch.from_numpy(state).reshape(1, state_dim).to(device=device, dtype=torch.float32)
@@ -113,10 +116,16 @@ def evaluate_episode_rtg(
             timesteps.to(dtype=torch.long),
         )
         actions[-1] = action
-        action = action.detach().cpu().numpy()
-
+        action = np.argmax(action.detach().cpu().numpy())
+        #print(action)
         state, reward, done, _ = env.step(action)
-
+        state_array = [0 for i in range(env.observation_space.n)]
+        state_array[state] = 1
+        state = np.array(state_array)
+        # print("state: " +  str(state))
+        # print("reward: " + str(reward))
+        # print("done: " + str(done))
+        # print("_" + str(_))
         cur_state = torch.from_numpy(state).to(device=device).reshape(1, state_dim)
         states = torch.cat([states, cur_state], dim=0)
         rewards[-1] = reward
